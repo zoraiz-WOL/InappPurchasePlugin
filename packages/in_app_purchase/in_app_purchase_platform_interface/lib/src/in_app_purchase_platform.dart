@@ -194,4 +194,6 @@ abstract class InAppPurchasePlatform extends PlatformInterface {
   ///    [PurchaseDetails.verificationData].
   Future<void> restorePurchases({String? applicationUserName}) =>
       throw UnimplementedError('restorePurchases() has not been implemented.');
+  Future<bool> verifyPurchases({String? applicationUserName}) =>
+      throw UnimplementedError('restorePurchases() has not been implemented.');
 }

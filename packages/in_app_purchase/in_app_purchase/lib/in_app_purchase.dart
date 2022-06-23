@@ -208,4 +208,8 @@ class InAppPurchase implements InAppPurchasePlatformAdditionProvider {
       InAppPurchasePlatform.instance.restorePurchases(
         applicationUserName: applicationUserName,
       );
+  Future<bool> verifyPurchases({String? applicationUserName}) =>
+      InAppPurchasePlatform.instance.verifyPurchases(
+        applicationUserName: applicationUserName,
+      );
 }

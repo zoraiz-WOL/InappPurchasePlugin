@@ -3,12 +3,13 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-
+import 'package:get/get.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart';
-
 import '../billing_client_wrappers.dart';
 
 /// [IAPError.code] code for failed purchases.
@@ -188,20 +189,20 @@ class InAppPurchaseAndroidPlatform extends InAppPurchasePlatform {
 
     final Set<String> errorCodeSet = responses
         .where((PurchasesResultWrapper response) =>
-            response.responseCode != BillingResponse.ok)
+    response.responseCode != BillingResponse.ok)
         .map((PurchasesResultWrapper response) =>
-            response.responseCode.toString())
+        response.responseCode.toString())
         .toSet();
 
     final String errorMessage =
-        errorCodeSet.isNotEmpty ? errorCodeSet.join(', ') : '';
+    errorCodeSet.isNotEmpty ? errorCodeSet.join(', ') : '';
 
     final List<PurchaseDetails> pastPurchases =
-        responses.expand((PurchasesResultWrapper response) {
+    responses.expand((PurchasesResultWrapper response) {
       return response.purchasesList;
     }).map((PurchaseWrapper purchaseWrapper) {
       final GooglePlayPurchaseDetails purchaseDetails =
-          GooglePlayPurchaseDetails.fromPurchase(purchaseWrapper);
+      GooglePlayPurchaseDetails.fromPurchase(purchaseWrapper);
 
       purchaseDetails.status = PurchaseStatus.restored;
 
@@ -215,9 +216,66 @@ class InAppPurchaseAndroidPlatform extends InAppPurchasePlatform {
         message: errorMessage,
       );
     }
+    if (pastPurchases.length==0)
+    {
+      Get.defaultDialog(title: "Status" ,  middleText: "Restore purchased failed!" , actions: [Center(child: RaisedButton(color: Colors.orange,onPressed: (){Get.back();},child: Text("Okay", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),),)]);
 
+    }
+    else {
+      Get.defaultDialog(title: "Status" ,  middleText: "Restore purchased successful!" , actions: [Center(child: RaisedButton(color: Colors.orange,onPressed: (){Get.back();},child: Text("Okay", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),),)]);
+
+    }
     _purchaseUpdatedController.add(pastPurchases);
+
   }
+
+  @override
+  Future<bool> verifyPurchases({
+    String? applicationUserName,
+  }) async {
+    List<PurchasesResultWrapper> responses;
+
+    responses = await Future.wait(<Future<PurchasesResultWrapper>>[
+      billingClient.queryPurchases(SkuType.inapp),
+      billingClient.queryPurchases(SkuType.subs)
+    ]);
+
+    final Set<String> errorCodeSet = responses
+        .where((PurchasesResultWrapper response) =>
+    response.responseCode != BillingResponse.ok)
+        .map((PurchasesResultWrapper response) =>
+        response.responseCode.toString())
+        .toSet();
+
+    final String errorMessage =
+    errorCodeSet.isNotEmpty ? errorCodeSet.join(', ') : '';
+
+    final List<PurchaseDetails> pastPurchases =
+    responses.expand((PurchasesResultWrapper response) {
+      return response.purchasesList;
+    }).map((PurchaseWrapper purchaseWrapper) {
+      final GooglePlayPurchaseDetails purchaseDetails =
+      GooglePlayPurchaseDetails.fromPurchase(purchaseWrapper);
+
+
+
+      return purchaseDetails;
+    }).toList();
+
+    if (errorMessage.isNotEmpty) {
+      return false;
+    }
+    if (pastPurchases.length==0)
+    {
+      return false;
+    }
+    else {
+      return true;
+    }
+
+
+  }
+
 
   Future<void> _connect() =>
       billingClient.startConnection(onBillingServiceDisconnected: () {});
